@@ -1,6 +1,13 @@
-.env
 .Rproj.user
 *.Rproj
 .Rhistory
 .RData
 .Renviron
+.env
+*.env
+secrets.R
+config.yml
+supabase/.env
+supabase/secrets.toml
+*.tar.gz
+*.zip
