@@ -5,10 +5,10 @@ library(jsonlite)
 library(reactable)
 
 # ── Config ─────────────────────────────────────────────────────────────
-SUPABASE_URL      <- "https://acmgizugkdwscdcacioj.supabase.co"
-SUPABASE_ANON_KEY <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWdpenVna2R3c2NkY2FjaW9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNzYwOTUsImV4cCI6MjA5MDg1MjA5NX0.X6gmWDgcO207_DYfXUImBPSFdDmPlmcZWnTk8ng1u24"
-APP_USERNAME      <- "admin"
-APP_PASSWORD      <- "burnnotice2024"
+SUPABASE_URL      <- Sys.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY <- Sys.getenv("SUPABASE_ANON_KEY")
+APP_USERNAME      <- Sys.getenv("APP_USERNAME")
+APP_PASSWORD      <- Sys.getenv("APP_PASSWORD")
 
 # ── Auth UI ─────────────────────────────────────────────────────────────
 login_ui <- fluidPage(
