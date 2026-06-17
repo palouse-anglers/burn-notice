@@ -51,12 +51,37 @@ main_ui <- page_navbar(
     bootswatch = "darkly",
     primary    = "#e94560"
   ),
-  tags$head(tags$style(HTML("
+tags$head(tags$style(HTML("
     .form-label, label, .control-label { color: white !important; }
     .form-check-label { color: white !important; }
-    p, span, div { color: white; }
+    .card p, .card span, .card div { color: white; }
     .card-header { color: white !important; }
     .char-count { color: white !important; }
+
+    /* Dropdown / select styling (scoped to cards only) */
+    .card .selectize-input, .card .selectize-dropdown,
+    .card select.form-select, .card select.form-control {
+      background-color: #0f3460 !important;
+      color: white !important;
+      border: 1px solid #e94560 !important;
+    }
+    .card .selectize-dropdown-content .option,
+    .card .selectize-dropdown-content .active {
+      background-color: #16213e !important;
+      color: white !important;
+    }
+
+    /* Notification / alert styling */
+    .shiny-notification {
+      background-color: #16213e !important;
+      color: white !important;
+      border: 1px solid #e94560 !important;
+    }
+    .shiny-notification-message,
+    .shiny-notification-error,
+    .shiny-notification-warning {
+      color: white !important;
+    }
   "))),
 
   # ── Compose page ──────────────────────────────────────────────────
@@ -122,14 +147,22 @@ main_ui <- page_navbar(
   # ── Subscribers page ──────────────────────────────────────────────
   nav_panel("Subscribers",
     layout_columns(
-      col_widths = c(4, 8),
+      col_widths = c(4, 4, 4),
 
-      card(
+card(
         card_header("Add Subscriber"),
+        textInput("new_name", "Name", placeholder = "Jane Doe"),
         textInput("new_phone", "Phone Number", placeholder = "+15091234567"),
         helpText(span(style = "color:white;", "Format: +1XXXXXXXXXX")),
         uiOutput("phone_validation_msg"),
         uiOutput("add_subscriber_btn")
+      ),
+
+      card(
+        card_header("Remove Subscriber"),
+        uiOutput("remove_select_ui"),
+        actionButton("remove_subscriber_btn", "Remove Subscriber",
+                     class = "btn-danger w-100", icon = icon("user-minus"))
       ),
 
       card(
@@ -246,12 +279,12 @@ server <- function(input, output, session) {
     }, error = function(e) data.frame())
   }
 
-  fetch_subscribers <- function() {
+fetch_subscribers <- function() {
     tryCatch({
       resp <- request(paste0(SUPABASE_URL, "/rest/v1/subscribers")) |>
         req_headers("apikey"        = SUPABASE_ANON_KEY,
                     "Authorization" = paste("Bearer", SUPABASE_ANON_KEY)) |>
-        req_url_query(select = "id,phone,status,created_at",
+        req_url_query(select = "id,name,phone,status,created_at",
                       order  = "created_at.desc") |>
         req_perform()
       resp_body_json(resp, simplifyVector = TRUE)
@@ -302,15 +335,31 @@ server <- function(input, output, session) {
     }
   })
 
-# ── Add subscriber ─────────────────────────────────────────────
+  # ── Remove subscriber dropdown ──────────────────────────────────
+  output$remove_select_ui <- renderUI({
+    df <- subscribers_data()
+    if (is.data.frame(df) && nrow(df) > 0) {
+      labels  <- ifelse(is.na(df$name) | df$name == "", df$phone,
+                        paste0(df$name, " (", df$phone, ")"))
+      choices <- setNames(df$phone, labels)
+    } else {
+      choices <- character(0)
+    }
+    selectInput("remove_phone_select", "Select subscriber to remove",
+                choices = choices)
+  })
+
+  # ── Add subscriber ─────────────────────────────────────────────
   observeEvent(input$add_subscriber, {
     phone <- trimws(input$new_phone)
+
+name <- trimws(input$new_name %||% "")
 
     result <- tryCatch({
       resp <- request(paste0(SUPABASE_URL, "/functions/v1/manage_subscriber")) |>
         req_headers("Content-Type"  = "application/json",
                     "Authorization" = paste("Bearer", SUPABASE_ANON_KEY)) |>
-        req_body_json(list(action = "add", phone = phone)) |>
+        req_body_json(list(action = "add", phone = phone, name = name)) |>
         req_perform()
       resp_body_json(resp)
     }, error = function(e) list(error = e$message))
@@ -322,13 +371,15 @@ server <- function(input, output, session) {
       showNotification(paste0("✅ ", phone, " added successfully!"),
                        type = "message", duration = 4)
       updateTextInput(session, "new_phone", value = "")
+      updateTextInput(session, "new_name", value = "")
       subscribers_data(fetch_subscribers())
     }
   })
 
-# ── Remove subscriber ──────────────────────────────────────────
-  observeEvent(input$remove_phone, {
-    phone <- input$remove_phone
+  # ── Remove subscriber ──────────────────────────────────────────
+  observeEvent(input$remove_subscriber_btn, {
+    phone <- input$remove_phone_select
+    req(phone)
 
     tryCatch({
       request(paste0(SUPABASE_URL, "/functions/v1/manage_subscriber")) |>
@@ -389,8 +440,9 @@ server <- function(input, output, session) {
     }
 
     reactable(
-      df[, c("phone", "status", "created_at"), drop = FALSE],
+      df[, c("name", "phone", "status", "created_at"), drop = FALSE],
       columns = list(
+        name       = colDef(name = "Name", minWidth = 120),
         phone      = colDef(name = "Phone Number", minWidth = 140),
         status     = colDef(name = "Status", maxWidth = 100,
           cell = function(value) {

@@ -21,7 +21,7 @@ serve(async (req) => {
     const body = await req.json();
     console.log("Request body:", JSON.stringify(body));
 
-    const { action, phone } = body;
+    const { action, phone, name } = body;
 
     if (!phone || !/^\+1[0-9]{10}$/.test(phone)) {
       return new Response(
@@ -32,13 +32,18 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    if (action === "add") {
-      console.log("Adding subscriber:", phone);
+if (action === "add") {
+      console.log("Adding subscriber:", phone, "with name:", name, "typeof name:", typeof name);
+      const insertPayload = { phone, name: name || null, region: "columbia_county", status: "active" };
+      console.log("Insert payload:", JSON.stringify(insertPayload));
+
       const { data, error } = await supabase
         .from("subscribers")
-        .insert({ phone, region: "columbia_county", status: "active" })
+        .insert(insertPayload)
         .select()
         .single();
+
+      console.log("Insert result data:", JSON.stringify(data));
 
       if (error) {
         console.error("Insert error:", error.message, error.details, error.hint);

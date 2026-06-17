@@ -1348,14 +1348,17 @@
     }
   },
   "files": {
+    ".github/workflows/keep-alive.yml": {
+      "checksum": "23f460581499607d5c6a389e8f929a61"
+    },
     ".Renviron": {
       "checksum": "747501933f4358cd763a2e6fcd478f28"
     },
     "app.R": {
-      "checksum": "5c426daf8eda683a6c5046a9363aa7a6"
+      "checksum": "466d779f5aeef7b4b5e9d44aa89a01a3"
     },
     "supabase/.temp/cli-latest": {
-      "checksum": "dce2906100a454c001e778ad44942674"
+      "checksum": "83969e1f13a016512ffb714c16dc41e9"
     },
     "supabase/.temp/gotrue-version": {
       "checksum": "e5f0110f5dd0dba14dd2f53c0b6680c3"
@@ -1388,7 +1391,7 @@
       "checksum": "50e79223b7557cf97d1ae662cf360e49"
     },
     "supabase/functions/manage_subscriber/index.ts": {
-      "checksum": "fd7d5f9ef2df331e90cfb0a6d2b37f63"
+      "checksum": "a87b51417ae4fb0d9324846090b5afcd"
     },
     "supabase/functions/send_alert/.npmrc": {
       "checksum": "5d4f9c1311fee4336579ff85a59f09b7"
